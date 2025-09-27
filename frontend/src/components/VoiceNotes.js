@@ -5,7 +5,7 @@ const VoiceNotes = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [finalTranscript, setFinalTranscript] = useState('');
-  const [startTime, setStartTime] = useState(null);
+  //const [startTime, setStartTime] = useState(null);
   const [timer, setTimer] = useState('00:00');
   const [status, setStatus] = useState('ready');
   const [error, setError] = useState('');
@@ -13,6 +13,8 @@ const VoiceNotes = () => {
 
   const recognitionRef = useRef(null);
   const timerIntervalRef = useRef(null);
+
+
 
   // Check browser support on mount
   useEffect(() => {
@@ -32,7 +34,18 @@ const VoiceNotes = () => {
           setError('Microphone access is required. Please allow microphone access and refresh.');
         });
     }
-
+    //backend connection test
+    const testBackendConnection = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/health');
+      const data = await response.json();
+      console.log('Backend connected:', data);
+    } catch (error) {
+      console.error('Backend connection failed:', error);
+    }
+  };
+  
+  testBackendConnection();
     return () => {
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
@@ -92,7 +105,7 @@ const VoiceNotes = () => {
   // FIXED TIMER FUNCTIONS
   const startTimer = useCallback(() => {
     const recordingStartTime = Date.now(); // Capture start time locally
-    setStartTime(recordingStartTime); // Update state for other uses
+    //setStartTime(recordingStartTime); // Update state for other uses
     
     timerIntervalRef.current = setInterval(() => {
       const elapsed = Date.now() - recordingStartTime; // Use local variable
