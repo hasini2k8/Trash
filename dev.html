@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inclusive Voice Notes - Recording</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .tagline {
+            font-size: 1.1em;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .recording-section {
+            margin: 30px 0;
+        }
+
+        .record-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: none;
+            font-size: 2.5em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .record-button.ready {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .record-button.recording {
+            background: linear-gradient(135deg, #ff4757 0%, #ff3742 100%);
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+
+        .record-button.processing {
+            background: linear-gradient(135deg, #ffa502 0%, #ff6348 100%);
+            color: white;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .record-button:hover:not(.recording) {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.15);
+        }
+
+        .status {
+            font-size: 1.2em;
+            margin: 20px 0;
+            min-height: 30px;
+        }
+
+        .status.ready { color: #667eea; }
+        .status.recording { color: #ff4757; }
+        .status.processing { color: #ffa502; }
+
+        .timer {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .transcript-section {
+            margin-top: 40px;
+            text-align: left;
+        }
+
+        .transcript-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .transcript-box {
+            background: #f8f9ff;
+            border: 2px solid #e0e6ff;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 150px;
+            max-height: 300px;
+            overflow-y: auto;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .transcript-box.empty {
+            color: #999;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            background: #ff4757;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .speaker-info {
+            background: #e8f4f8;
+            border-left: 4px solid #667eea;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .support-info {
+            background: #f0f8ff;
+            border: 1px solid #cce7ff;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .record-button {
+                width: 100px;
+                height: 100px;
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🎤 Voice Notes</div>
+        <div class="tagline">AI-Powered Meeting Analysis</div>
+
+        <div class="support-info">
+            <strong>Browser Support:</strong> This works best in Chrome, Safari, or Edge. Make sure to allow microphone access when prompted.
+        </div>
+
+        <div class="error-message" id="error-message"></div>
+
+        <div class="recording-section">
+            <button class="record-button ready" id="record-button" onclick="toggleRecording()">
+                🎤
+            </button>
+            
+            <div class="status ready" id="status">Click to start recording</div>
+            <div class="timer" id="timer">00:00</div>
+            
+            <div class="controls">
+                <button class="btn" id="clear-btn" onclick="clearTranscript()" disabled>
+                    🗑️ Clear
+                </button>
+                <button class="btn" id="download-btn" onclick="downloadTranscript()" disabled>
+                    💾 Download
+                </button>
+            </div>
+        </div>
+
+        <div class="transcript-section">
+            <div class="transcript-title">Live Transcript</div>
+            <div class="transcript-box empty" id="transcript">
+                Transcript will appear here as you speak...
+            </div>
+            <div class="speaker-info">
+                <strong>Tip:</strong> Speak clearly and pause between speakers for better accuracy. We'll add speaker identification in the next version!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let recognition = null;
+        let isRecording = false;
+        let transcript = '';
+        let startTime = null;
+        let timerInterval = null;
+        let finalTranscript = '';
+
+        // Check browser support
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            showError('Speech recognition is not supported in this browser. Please use Chrome, Safari, or Edge.');
+        }
+
+        function initSpeechRecognition() {
+            // Create recognition object
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            
+            // Configure recognition settings
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+            
+            // Handle results
+            recognition.onresult = function(event) {
+                let interimTranscript = '';
+                
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcriptPart = event.results[i][0].transcript;
+                    
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcriptPart + ' ';
+                    } else {
+                        interimTranscript += transcriptPart;
+                    }
+                }
+                
+                // Update display
+                updateTranscriptDisplay(finalTranscript + interimTranscript);
+            };
+            
+            // Handle errors
+            recognition.onerror = function(event) {
+                console.error('Speech recognition error:', event.error);
+                if (event.error === 'not-allowed') {
+                    showError('Microphone access denied. Please allow microphone access and refresh the page.');
+                } else if (event.error === 'no-speech') {
+                    // This is normal, just continue
+                } else {
+                    showError(`Recognition error: ${event.error}`);
+                }
+            };
+            
+            // Handle end of recognition
+            recognition.onend = function() {
+                if (isRecording) {
+                    // Restart recognition if we're still supposed to be recording
+                    try {
+                        recognition.start();
+                    } catch (e) {
+                        console.log('Recognition restart failed:', e);
+                    }
+                }
+            };
+        }
+
+        function toggleRecording() {
+            if (!recognition) {
+                initSpeechRecognition();
+            }
+            
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+
+        function startRecording() {
+            try {
+                // Reset transcript
+                finalTranscript = '';
+                
+                // Start recognition
+                recognition.start();
+                
+                // Update UI
+                isRecording = true;
+                startTime = Date.now();
+                updateUI('recording');
+                startTimer();
+                
+                // Clear any error messages
+                hideError();
+                
+            } catch (error) {
+                showError('Failed to start recording. Please refresh and try again.');
+                console.error('Start recording error:', error);
+            }
+        }
+
+        function stopRecording() {
+            if (recognition) {
+                recognition.stop();
+            }
+            
+            isRecording = false;
+            updateUI('processing');
+            stopTimer();
+            
+            // After a brief delay, show ready state
+            setTimeout(() => {
+                updateUI('ready');
+                enableControls();
+            }, 1000);
+        }
+
+        function updateUI(state) {
+            const button = document.getElementById('record-button');
+            const status = document.getElementById('status');
+            
+            button.className = `record-button ${state}`;
+            status.className = `status ${state}`;
+            
+            switch(state) {
+                case 'ready':
+                    button.innerHTML = '🎤';
+                    status.textContent = 'Click to start recording';
+                    break;
+                case 'recording':
+                    button.innerHTML = '⏹️';
+                    status.textContent = 'Recording... Click to stop';
+                    break;
+                case 'processing':
+                    button.innerHTML = '⏳';
+                    status.textContent = 'Processing...';
+                    break;
+            }
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (startTime) {
+                    const elapsed = Date.now() - startTime;
+                    const seconds = Math.floor(elapsed / 1000);
+                    const minutes = Math.floor(seconds / 60);
+                    const displaySeconds = seconds % 60;
+                    
+                    document.getElementById('timer').textContent = 
+                        `${minutes.toString().padStart(2, '0')}:${displaySeconds.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function updateTranscriptDisplay(text) {
+            const transcriptBox = document.getElementById('transcript');
+            
+            if (text.trim()) {
+                transcriptBox.textContent = text;
+                transcriptBox.classList.remove('empty');
+                
+                // Scroll to bottom
+                transcriptBox.scrollTop = transcriptBox.scrollHeight;
+            }
+        }
+
+        function enableControls() {
+            if (finalTranscript.trim()) {
+                document.getElementById('clear-btn').disabled = false;
+                document.getElementById('download-btn').disabled = false;
+            }
+        }
+
+        function clearTranscript() {
+            finalTranscript = '';
+            const transcriptBox = document.getElementById('transcript');
+            transcriptBox.textContent = 'Transcript will appear here as you speak...';
+            transcriptBox.classList.add('empty');
+            
+            document.getElementById('clear-btn').disabled = true;
+            document.getElementById('download-btn').disabled = true;
+            document.getElementById('timer').textContent = '00:00';
+        }
+
+        function downloadTranscript() {
+            if (!finalTranscript.trim()) return;
+            
+            const blob = new Blob([finalTranscript], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `meeting-transcript-${new Date().toISOString().slice(0,10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function showError(message) {
+            const errorElement = document.getElementById('error-message');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error-message').style.display = 'none';
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Voice Notes initialized');
+            
+            // Test microphone access
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(stream => {
+                        console.log('Microphone access granted');
+                        stream.getTracks().forEach(track => track.stop());
+                    })
+                    .catch(err => {
+                        showError('Microphone access is required. Please allow microphone access and refresh.');
+                    });
+            }
+        });
+    </script>
+</body>
+</html>
