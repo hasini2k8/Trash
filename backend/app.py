@@ -18,7 +18,7 @@ CORS(app)
 
 # Configure Gemini
 genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
-model = genai.GenerativeModel('gemini-pro')
+model = genai.GenerativeModel('gemini-1.5-pro')
 
 # In-memory storage (use a database in production)
 transcriptions = []
