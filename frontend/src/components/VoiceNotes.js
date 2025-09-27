@@ -89,18 +89,20 @@ const VoiceNotes = () => {
     return recognition;
   }, [finalTranscript, isRecording]);
 
+  // FIXED TIMER FUNCTIONS
   const startTimer = useCallback(() => {
+    const recordingStartTime = Date.now(); // Capture start time locally
+    setStartTime(recordingStartTime); // Update state for other uses
+    
     timerIntervalRef.current = setInterval(() => {
-      if (startTime) {
-        const elapsed = Date.now() - startTime;
-        const seconds = Math.floor(elapsed / 1000);
-        const minutes = Math.floor(seconds / 60);
-        const displaySeconds = seconds % 60;
-        
-        setTimer(`${minutes.toString().padStart(2, '0')}:${displaySeconds.toString().padStart(2, '0')}`);
-      }
+      const elapsed = Date.now() - recordingStartTime; // Use local variable
+      const seconds = Math.floor(elapsed / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const displaySeconds = seconds % 60;
+      
+      setTimer(`${minutes.toString().padStart(2, '0')}:${displaySeconds.toString().padStart(2, '0')}`);
     }, 1000);
-  }, [startTime]);
+  }, []); // Remove startTime dependency
 
   const stopTimer = useCallback(() => {
     if (timerIntervalRef.current) {
@@ -120,11 +122,10 @@ const VoiceNotes = () => {
       recognitionRef.current.start();
       
       setIsRecording(true);
-      setStartTime(Date.now());
       setStatus('recording');
       setError('');
       
-      startTimer();
+      startTimer(); // This now works correctly
     } catch (error) {
       setError('Failed to start recording. Please refresh and try again.');
       console.error('Start recording error:', error);
