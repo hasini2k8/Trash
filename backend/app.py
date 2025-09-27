@@ -7,11 +7,14 @@ from datetime import datetime
 import google.generativeai as genai
 from dotenv import load_dotenv
 
+
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
+
+
 
 # Configure Gemini
 genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
@@ -230,6 +233,6 @@ def summarize_with_gemini(text):
         return f"Summary unavailable: {str(e)}"
 
 if __name__ == '__main__':
-    port = int(os.getenv('PORT', 5000))
+    port = int(os.getenv('PORT', 3000))
     debug = os.getenv('FLASK_ENV') == 'development'
     app.run(host='0.0.0.0', port=port, debug=debug)
